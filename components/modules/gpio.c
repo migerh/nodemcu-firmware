@@ -36,6 +36,7 @@
 
 #include "driver/gpio.h"
 #include "task/task.h"
+#include "esp_sleep.h"
 
 #include <assert.h>
 
@@ -192,6 +193,17 @@ static int lgpio_wakeup (lua_State *L)
   return 0;
 }
 
+// Lua: gpio.dsleep_wakeup(gpio, 0 || 1)
+static int lgpio_dsleep_wakeup (lua_State *L)
+{
+  int gpio = luaL_checkint (L, 1);
+  int intr_type = luaL_optint (L, 2, GPIO_INTR_DISABLE);
+  if (intr_type == GPIO_INTR_DISABLE)
+    check_err (L, esp_sleep_disable_wakeup_source (ESP_SLEEP_WAKEUP_EXT0));
+  else
+    check_err (L, esp_sleep_enable_ext0_wakeup (gpio, intr_type));
+  return 0;
+}
 
 // Lua: gpio.write(gpio, 0 || 1)
 static int lgpio_write (lua_State *L)
@@ -237,6 +249,7 @@ static const LUA_REG_TYPE lgpio_map[] =
   { LSTRKEY( "read"   ),            LFUNCVAL( lgpio_read )            },
   { LSTRKEY( "trig" ),              LFUNCVAL( lgpio_trig )            },
   { LSTRKEY( "wakeup" ),            LFUNCVAL( lgpio_wakeup )          },
+  { LSTRKEY( "dsleep_wakeup" ),     LFUNCVAL( lgpio_dsleep_wakeup )   },
   { LSTRKEY( "write"  ),            LFUNCVAL( lgpio_write )           },
 
 
